@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Haunted Headset</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Bowlby+One&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow tarot-card column, screens swap in place; a live queue strip of meters rides the top during trials. Single dark world by choice. */
+:root{
+  --void:#0c090f; --navy:#16111c; --navy-2:#211a2a; --orange:#ffad80; --lilac:#c7a6ff; --ink:#140d18;
+  --bone:#fff1e6; --silver:#d6c6f7; --dim:#9586a8;
+  --blood:#ffad80; --blood-glow:#ffc29e; --moss:#c7a6ff; --amber:#ffd27a;
+  --f-display:"IM Fell English", Georgia, "Times New Roman", serif;
+  --f-sc:"IM Fell English SC", Georgia, serif;
+  --f-loud:"Bowlby One", Impact, "Arial Black", sans-serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{
+  background:var(--void);
+  background-image:radial-gradient(120% 60% at 50% -10%, #3b2160 0%, transparent 60%), radial-gradient(60% 40% at 50% 110%, #5a2c14 0%, transparent 70%);
+  background-attachment:fixed;
+  color:var(--bone); font-family:var(--f-body); font-size:16px; line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:20px 48px;
+}
+.wrap{max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:20px}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible{outline:2px solid var(--blood-glow); outline-offset:3px}
+.eyebrow{font-family:var(--f-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--silver)}
+h1,h2,h3{font-family:var(--f-display); font-weight:400; text-wrap:balance; margin:0; line-height:1.1}
+p{margin:0}
+
+/* queue strip */
+.strip{display:flex; align-items:center; justify-content:space-between; gap:12px; font-family:var(--f-mono); font-size:12px; color:var(--silver)}
+.live{display:inline-flex; align-items:center; gap:8px}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--blood-glow); box-shadow:0 0 10px var(--blood-glow); animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* card frame */
+.card{
+  position:relative; background:linear-gradient(180deg,var(--navy) 0%, #0f1424 100%);
+  border:1px solid #46345e; border-radius:4px; padding:26px 22px;
+  box-shadow:0 20px 60px -20px #000, inset 0 0 0 5px var(--navy), inset 0 0 0 6px #30243f;
+}
+.card::before,.card::after{content:"☾"; position:absolute; top:10px; font-size:14px; color:var(--lilac)}
+.card::before{left:14px}.card::after{right:14px; transform:scaleX(-1)}
+
+/* intro */
+.title{font-size:clamp(40px,11vw,62px); letter-spacing:-.01em}
+.title em{font-style:italic; color:var(--blood-glow)}
+.sub{font-family:var(--f-display); font-style:italic; font-size:19px; color:var(--silver)}
+.cover{margin:0; position:relative; padding-top:8px; animation:flick 6s ease-in-out infinite}
+.cover .moon{position:absolute; left:50%; top:46%; width:58%; aspect-ratio:1/1; max-width:100%; transform:translate(-50%,-50%); border-radius:50%;
+  background:radial-gradient(circle, #ffad8033 0%, #c7a6ff22 45%, transparent 70%); pointer-events:none}
+.cover-art{position:relative; display:block; width:100%; height:auto; max-width:100%;
+  filter:drop-shadow(0 0 1px #e4d6ff) drop-shadow(0 0 1px #e4d6ff) drop-shadow(-10px 0 18px #c7a6ff66) drop-shadow(10px 0 18px #ffad8055)}
+.cover-art .ink{fill:#05060b} .cover-art .lav{fill:#b9a2e3} .cover-art .ember{fill:#c8303f}
+@keyframes flick{0%,92%,100%{filter:none}93%{filter:brightness(.82)}95%{filter:none}96.5%{filter:brightness(.88)}}
+.phone{display:block; margin:6px auto 2px; width:96px; height:auto}
+.phone .ring{animation:ring 2.4s ease-in-out infinite; transform-origin:48px 40px}
+@keyframes ring{0%,70%,100%{transform:rotate(0)}74%{transform:rotate(-8deg)}78%{transform:rotate(8deg)}82%{transform:rotate(-6deg)}86%{transform:rotate(5deg)}}
+.script{border-left:2px solid var(--blood); padding:4px 0 4px 16px; font-family:var(--f-display); font-size:18px; line-height:1.5}
+.script .lbl{display:block; font-family:var(--f-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); margin-bottom:6px}
+.row{display:flex; flex-wrap:wrap; gap:12px}
+.btn{
+  border:1px solid var(--blood); background:var(--blood); color:var(--ink); padding:14px 22px; border-radius:2px;
+  font-family:var(--f-sc); font-size:19px; letter-spacing:.04em; min-height:52px;
+  transition:background .2s, box-shadow .2s;
+}
+.btn:hover{background:var(--blood-glow); box-shadow:0 0 24px -4px var(--blood-glow)}
+.btn.ghost{background:transparent; color:var(--bone); border-color:#6a528c}
+.btn.ghost:hover{border-color:var(--silver); box-shadow:none; background:#ffffff08}
+.fine{font-size:13px; color:var(--dim)}
+
+/* meters */
+.meters{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.m{display:flex; flex-direction:column; gap:5px; min-width:0}
+.m .top{display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--silver); font-variant-numeric:tabular-nums}
+.bar{height:6px; background:#ffffff12; border-radius:1px; overflow:hidden}
+.bar i{display:block; height:100%; transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.m.san i{background:var(--moss)} .m.adh i{background:var(--orange)} .m.hold i{background:var(--amber)}
+.m.hold.danger i{background:#ff7a6b}
+.progress{display:flex; gap:4px}
+.progress span{flex:1; height:2px; background:#ffffff18}
+.progress span.on{background:var(--blood-glow)}
+
+/* trial */
+.caller{display:inline-flex; align-items:center; gap:8px; font-family:var(--f-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--blood-glow)}
+.trial-name{font-size:clamp(30px,8vw,40px); margin-top:8px}
+.scene{font-size:17px; color:var(--bone); margin-top:14px}
+.choices{display:flex; flex-direction:column; gap:10px; margin-top:20px}
+.choice{
+  text-align:left; display:grid; grid-template-columns:28px 1fr; gap:10px; align-items:start;
+  background:#ffffff06; border:1px solid #3d2e50; border-radius:3px; padding:14px 14px; font-size:15.5px; line-height:1.45;
+  transition:border-color .15s, background .15s, transform .15s;
+}
+.choice:hover:not(:disabled){border-color:var(--silver); background:#ffffff0c}
+.choice .k{font-family:var(--f-sc); font-size:18px; color:var(--silver); line-height:1.2}
+.choice:disabled{cursor:default; opacity:.4}
+.choice.picked{opacity:1; border-color:var(--blood-glow); background:#ffad8024}
+.choice.picked .k{color:var(--blood-glow)}
+.verdict{margin-top:18px; padding-top:16px; border-top:1px dashed #46345e; display:flex; flex-direction:column; gap:14px}
+.verdict p{font-family:var(--f-display); font-style:italic; font-size:18px; color:var(--silver)}
+.deltas{display:flex; flex-wrap:wrap; gap:8px; font-family:var(--f-mono); font-size:11.5px}
+.deltas span{padding:3px 8px; border:1px solid #46345e; border-radius:2px; color:var(--silver)}
+.deltas .good{color:var(--moss); border-color:#5a457c}
+.deltas .bad{color:var(--blood-glow); border-color:#7a4a33}
+.ghostline{font-family:var(--f-mono); font-size:12px; color:var(--blood-glow)}
+
+/* result */
+.sigil{font-size:64px; line-height:1; text-align:center; color:var(--blood-glow); text-shadow:0 0 30px #ffad8077; animation:rise 1.2s ease-out both}
+@keyframes rise{from{opacity:.2; transform:translateY(10px) scale(.9)}to{opacity:1; transform:none}}
+.res-name{font-size:clamp(34px,9vw,46px); text-align:center}
+.res-tag{font-family:var(--f-display); font-style:italic; font-size:19px; color:var(--silver); text-align:center}
+.facts{display:flex; flex-direction:column; gap:14px; margin-top:4px}
+.fact .eyebrow{display:block; margin-bottom:3px}
+.prophecy{border:1px solid #7a4a33; background:#ffad8014; padding:16px; border-radius:3px; font-family:var(--f-display); font-size:18px}
+.score{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 0; border-block:1px solid #30243f}
+.score b{font-family:var(--f-mono); font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; color:var(--bone)}
+.score .r{text-align:right}
+
+/* bingo */
+.grid{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px}
+.cell{
+  min-height:76px; border:1px solid #3d2e50; background:#ffffff06; border-radius:4px;
+  font-size:clamp(9px,2.4vw,12.5px); line-height:1.18; padding:5px 3px; -webkit-hyphens:auto; display:flex; align-items:center; justify-content:center; text-align:center;
+  overflow-wrap:break-word; hyphens:auto; position:relative; transition:background .15s, border-color .15s;
+}
+.cell.on{background:#ffad8040; border-color:var(--blood-glow)}
+.cell.on::after{content:"✕"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:clamp(34px,10vw,52px); color:#ffad8040; pointer-events:none}
+.cell.free{font-family:var(--f-sc); font-size:clamp(10px,2.8vw,13px); background:#ffad8030; border-color:var(--blood)}
+.cell.win{box-shadow:inset 0 0 0 2px var(--amber)}
+.banner{font-family:var(--f-display); font-size:22px; text-align:center; color:var(--amber)}
+.copied{font-family:var(--f-mono); font-size:12px; color:var(--moss)}
+.screen{display:flex; flex-direction:column; gap:20px}
+.stack{display:flex; flex-direction:column; gap:16px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+
+/* pastel pop layer */
+.title{line-height:.95}
+.title .soft{display:block; font-family:var(--f-display); font-style:italic; color:var(--lilac); font-size:.62em}
+.title em{display:block; font-style:normal; font-family:var(--f-loud); color:var(--orange); letter-spacing:.01em; text-shadow:3px 3px 0 #5b3a8c, 0 0 28px #ffad8055}
+.card{border-color:#46345e; box-shadow:0 24px 60px -24px #000, inset 0 0 0 5px var(--navy), inset 0 0 0 6px #3a2b4f, 0 0 0 1px #c7a6ff22}
+.stripe{height:10px; margin:-26px -22px 6px; border-radius:3px 3px 0 0;
+  background:repeating-linear-gradient(-45deg, var(--orange) 0 14px, var(--ink) 14px 28px, var(--lilac) 28px 42px, var(--ink) 42px 56px)}
+.btn{font-family:var(--f-loud); font-size:16px; letter-spacing:.03em; border-radius:999px; box-shadow:0 4px 0 #b06a45}
+.btn:hover{box-shadow:0 4px 0 #b06a45, 0 0 24px -4px var(--orange)}
+.btn:active{transform:translateY(2px); box-shadow:0 2px 0 #b06a45}
+.btn.ghost{border-color:var(--lilac); color:var(--lilac); box-shadow:none}
+.btn.ghost:hover{background:#c7a6ff14; border-color:var(--lilac)}
+.btn.purple{background:var(--lilac); border-color:var(--lilac); box-shadow:0 4px 0 #6f52a8}
+.btn.purple:hover{box-shadow:0 4px 0 #6f52a8, 0 0 24px -4px var(--lilac)}
+.script{border-left-color:var(--lilac)}
+.caller{color:var(--orange)}
+.choice:hover:not(:disabled){border-color:var(--lilac)}
+.choice .k{color:var(--lilac)}
+.res-name{font-family:var(--f-loud); color:var(--orange); font-size:clamp(26px,7.4vw,36px); text-shadow:2px 2px 0 #5b3a8c}
+.sigil{color:var(--lilac); text-shadow:0 0 30px #c7a6ff88}
+.banner{color:var(--orange); font-family:var(--f-loud)}
+.dot{background:var(--orange); box-shadow:0 0 10px var(--orange)}
+.cell.win{box-shadow:inset 0 0 0 2px var(--lilac)}
+
+/* DJ studio */
+.deck{position:relative; background:linear-gradient(160deg,#1d1526,#0f0b13); border:1px solid #46345e; border-radius:18px; padding:16px 14px;
+  box-shadow:inset 0 1px 0 #ffffff10, 0 20px 50px -24px #000; display:flex; flex-direction:column; gap:14px}
+.deck-top{display:flex; justify-content:space-between; align-items:center; gap:10px; font-family:var(--f-mono); font-size:11px; letter-spacing:.14em; color:var(--silver); flex-wrap:wrap}
+.leds{display:flex; gap:5px}
+.leds i{width:7px; height:7px; border-radius:50%; background:#3d2e50}
+.leds i.lit{background:var(--orange); box-shadow:0 0 8px var(--orange)}
+.leds i.lit.p{background:var(--lilac); box-shadow:0 0 8px var(--lilac)}
+.booth{display:grid; grid-template-columns:120px 1fr; gap:14px; align-items:center}
+@media (max-width:420px){.booth{grid-template-columns:96px 1fr}}
+.platter{position:relative; width:100%; aspect-ratio:1/1; max-width:100%}
+.platter .base{position:absolute; inset:0; border-radius:50%; background:repeating-radial-gradient(circle,#2a2032 0 2px,#1b1421 2px 4px); box-shadow:0 0 0 4px #241b2e, 0 0 0 5px #46345e, 0 10px 24px #000}
+.vinyl{position:absolute; inset:5%}
+.playing .vinyl{animation:vin 1.8s linear infinite}
+@keyframes vin{to{transform:rotate(360deg)}}
+#record{width:100%; height:100%; display:block; transition:transform 3.2s cubic-bezier(.12,.72,.08,1)}
+.booth-copy{display:flex; flex-direction:column; gap:8px; min-width:0}
+.bpm{font-family:var(--f-loud); font-size:26px; color:var(--orange); line-height:1}
+.bpm small{font-family:var(--f-mono); font-size:11px; color:var(--silver); letter-spacing:.12em}
+.transport{display:flex; gap:8px; flex-wrap:wrap}
+.tbtn{border:1px solid var(--lilac); background:transparent; color:var(--lilac); border-radius:999px; padding:8px 14px; font-family:var(--f-mono); font-size:12px; letter-spacing:.06em; min-height:40px}
+.tbtn[aria-pressed="true"]{background:var(--lilac); color:var(--ink)}
+.chan{border-top:1px solid #30243f; padding-top:12px; display:flex; flex-direction:column; gap:9px}
+.chan-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.chan-head b{font-family:var(--f-loud); font-weight:400; font-size:15px; letter-spacing:.02em}
+.chan:nth-of-type(odd) .chan-head b{color:var(--orange)} .chan:nth-of-type(even) .chan-head b{color:var(--lilac)}
+.chan-head span{font-family:var(--f-mono); font-size:10.5px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase}
+.pads{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px}
+.pad{border:1px solid #3d2e50; background:#ffffff06; border-radius:8px; padding:9px 3px; font-size:clamp(10.5px,3vw,12px); line-height:1.2; overflow-wrap:anywhere; hyphens:auto; min-height:46px; text-align:center; color:var(--bone);
+  box-shadow:inset 0 -3px 0 #00000055; transition:background .12s, border-color .12s, transform .08s}
+.pad:active{transform:translateY(1px)}
+.pad[aria-pressed="true"]{background:var(--orange); color:var(--ink); border-color:var(--orange); box-shadow:inset 0 -3px 0 #00000033, 0 0 14px -2px var(--orange)}
+.chan:nth-of-type(even) .pad[aria-pressed="true"]{background:var(--lilac); border-color:var(--lilac); box-shadow:inset 0 -3px 0 #00000033, 0 0 14px -2px var(--lilac)}
+.pad.hit{filter:brightness(1.35)}
+.fader-row{display:grid; grid-template-columns:1fr 54px; gap:10px; align-items:center}
+.meter{display:flex; gap:2px; height:10px; align-items:stretch}
+.meter i{flex:1; background:#2b2136; border-radius:1px}
+.meter i.on{background:var(--lilac)} .meter i.on.hot{background:var(--orange)}
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:4px; background:linear-gradient(90deg,var(--lilac),var(--orange)); outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:30px; height:22px; border-radius:4px; background:#efe6f7; border:2px solid var(--ink); box-shadow:0 2px 0 #000; cursor:grab}
+input[type=range]::-moz-range-thumb{width:30px; height:22px; border-radius:4px; background:#efe6f7; border:2px solid var(--ink); cursor:grab}
+input[type=range]:focus-visible{outline:2px solid var(--orange); outline-offset:4px}
+.mixcard{border:1px solid var(--orange); border-radius:14px; padding:18px 16px; display:flex; flex-direction:column; gap:12px;
+  background:linear-gradient(160deg,#ffad8014,#c7a6ff10); animation:rise .8s ease-out both}
+.mixcard h3{font-family:var(--f-loud); color:var(--orange); font-size:clamp(20px,6vw,26px); text-shadow:2px 2px 0 #5b3a8c}
+.mixcard .story{font-family:var(--f-display); font-size:18px; line-height:1.5}
+.stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.stat{border:1px solid #46345e; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:2px}
+.stat b{font-family:var(--f-mono); font-size:20px; font-variant-numeric:tabular-nums}
+.stat span{font-family:var(--f-mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--silver)}
+.dare{border-top:1px dashed #46345e; padding-top:10px; font-size:15px}
+.dare .eyebrow{display:block; margin-bottom:3px; color:var(--lilac)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="strip">
+    <span class="live"><span class="dot"></span><span>ASTRAL QUEUE · LIVE</span></span>
+    <span id="clock">00:00 on shift</span>
+  </div>
+
+  <!-- INTRO -->
+  <section class="screen" id="intro">
+    <div class="card stack">
+      <div class="stripe" aria-hidden="true"></div>
+      <figure class="cover"><span class="moon" aria-hidden="true"></span><svg class="cover-art" xmlns="http://www.w3.org/2000/svg" viewBox="40 60 1120 490" role="img" aria-label="Silhouettes of a witch and a horned devil in headsets, working at laptops back to back"><path class="ink" fill-rule="evenodd" d="M60,532C58,529 61,529 96,529C126,529 132,529 131,528C130,526 127,517 108,464C104,451 96,428 91,414C82,389 81,387 83,385C85,384 118,385 198,386C251,387 257,387 259,389C262,391 270,415 294,485C303,513 309,528 309,527L309,524L350,524C372,524 390,524 390,524C390,523 371,523 349,523L308,522L299,497C295,483 291,471 291,470C291,470 294,465 297,459L302,449L301,446C297,441 302,430 307,430C309,430 310,429 315,417C327,384 337,370 353,367C356,366 359,365 360,364C363,361 376,362 378,366C379,367 380,367 386,367C397,366 400,364 400,361C400,360 401,358 401,356C402,355 403,354 402,354C402,353 402,353 403,352C404,351 404,351 403,348C402,347 401,344 401,342C400,337 396,337 393,340C392,341 390,342 390,341C389,341 386,342 384,342C375,346 370,344 368,336C367,333 364,328 362,326C361,324 359,321 359,320C359,319 358,317 356,316C355,314 354,312 354,309C354,305 353,303 351,301C349,298 349,298 350,295C351,294 352,290 352,287C353,283 353,282 351,283C350,283 345,281 345,280C345,279 347,279 348,279C350,279 352,279 352,278C352,277 349,271 347,269C347,268 346,267 346,266C347,264 346,262 344,262C343,262 343,263 343,276C342,284 338,293 335,293C333,293 333,290 336,287C338,286 339,283 340,282C340,279 340,279 338,282C332,290 331,292 330,292C327,292 317,299 317,301C317,301 316,302 315,302C314,302 312,304 310,306C306,309 304,314 306,314C306,314 307,316 307,319C307,322 308,325 310,329C313,335 314,340 312,340C311,340 311,339 311,338C311,337 310,334 310,332C308,330 308,330 308,336C308,343 306,347 303,349C302,350 302,350 303,350C305,350 304,352 300,353C297,355 297,355 296,354C295,353 295,353 294,354C293,355 292,355 289,354C280,352 278,352 275,353C273,354 272,355 271,356C271,357 272,356 274,355C278,353 279,353 279,354C279,354 278,355 276,356C272,358 270,363 272,368C273,371 273,373 271,372C268,370 267,358 270,353C273,349 275,348 283,348C289,349 291,349 293,348C294,347 296,346 298,345C303,343 303,336 298,324C295,317 295,316 296,311C296,308 296,306 296,306C295,306 291,314 291,315C291,316 290,317 290,317C288,317 290,311 293,307C294,305 295,303 295,302C295,301 296,301 296,301C297,302 299,301 300,299C302,298 304,296 305,295C307,294 308,292 307,292C307,291 309,290 312,289C317,287 322,284 323,280C324,279 324,279 325,280C326,282 329,275 329,270C327,262 327,252 328,252C328,252 329,251 330,249C330,248 331,246 332,245C332,243 332,243 329,244C320,248 316,258 322,265C324,267 324,269 322,269C321,269 316,260 316,255C315,252 315,250 317,247C320,243 324,238 328,236C331,235 332,233 330,233C330,233 329,232 328,232C327,231 323,228 318,224C288,202 267,171 274,159C277,153 283,151 299,152C319,152 341,157 372,168L382,172L387,167C389,165 392,163 393,162C395,161 398,158 401,153C408,142 420,129 432,120C437,115 445,109 449,104C457,97 458,96 475,87C505,72 513,71 522,78C529,83 542,96 551,106L557,114L556,124C556,135 555,160 556,164C556,165 558,166 559,167C569,171 572,185 564,193C558,199 549,200 544,195C541,193 542,192 545,193C551,194 559,187 559,181C559,176 554,170 549,169C545,169 545,167 548,166C550,166 551,165 551,165C551,164 552,164 553,164C554,165 555,165 555,164C555,163 554,163 554,163C553,163 553,160 553,150C553,139 553,137 550,128C547,118 546,117 541,115C533,111 518,107 517,108C517,108 515,112 514,116C513,119 511,125 509,128C506,133 506,134 506,138C507,140 507,147 507,152C507,157 508,169 509,178C510,190 510,196 509,200C508,203 508,205 509,206C510,207 510,210 510,212C510,214 511,216 511,218C512,219 513,223 513,228C515,244 514,242 528,252C554,268 575,283 581,288C592,298 586,302 560,302C542,303 527,302 527,301C527,300 526,300 525,300C524,300 528,308 532,313C536,318 544,323 545,322C546,322 547,323 548,324C548,325 551,327 554,329C563,334 573,347 573,353C573,354 574,356 576,357C580,359 580,361 576,359C574,358 574,358 574,362C574,364 574,367 573,369C572,373 572,373 577,376C579,378 584,382 587,385L593,391L594,388C594,386 594,382 594,380C593,378 593,376 594,376C596,376 597,386 595,391C594,393 594,395 595,398C596,400 596,402 595,402C594,402 594,405 595,405C597,406 595,415 591,424C588,432 586,439 588,439C588,439 589,440 589,441C589,446 591,450 594,451C598,453 598,454 593,454C588,453 583,448 582,441C582,436 582,436 580,437C577,440 571,452 573,453C573,453 574,454 573,457C572,462 576,470 581,477C588,488 590,496 587,507C585,512 583,514 582,512C581,512 582,510 583,507C586,503 587,495 585,490C583,487 583,487 583,494C583,500 583,501 579,508C577,512 575,516 574,516C573,517 572,518 573,519C573,520 572,520 570,520C567,520 561,525 561,527C561,529 569,530 569,528C570,527 570,527 571,528C571,529 575,529 584,529L597,529L597,525C597,514 602,490 607,477C612,467 612,465 609,459C605,451 604,448 608,441C610,435 610,433 611,414C612,391 614,381 618,372C623,362 635,351 648,346C651,344 652,343 653,341C655,338 664,329 666,329C666,329 669,325 672,321C679,309 683,305 687,305C693,305 699,307 710,311C727,318 726,318 733,312C736,309 739,306 740,306C741,305 741,305 739,304C736,301 736,300 740,301C744,301 747,298 747,294C747,291 747,291 745,292C743,293 738,293 736,292C733,290 734,289 738,289C743,288 744,286 742,280C741,275 741,275 740,278C740,280 739,281 739,281C738,281 738,279 738,274C739,267 739,266 736,268C734,269 729,268 729,267C729,266 730,266 731,266C733,266 736,262 736,258C736,253 735,250 733,251C732,251 732,251 732,246C733,242 733,242 731,243C731,245 730,246 730,247C730,247 729,248 729,248C727,248 728,240 731,237C733,235 733,233 729,233C727,233 722,229 722,228C722,227 723,227 725,228C730,229 734,226 734,223C734,221 735,220 735,220C736,220 738,218 740,215L743,211L740,212C736,212 736,211 740,208C742,206 743,205 742,205C740,204 735,201 735,200C735,199 737,199 739,200C742,200 743,200 744,199C745,198 746,197 747,197C747,198 749,197 751,195C753,194 756,192 758,191C762,188 760,187 756,189C752,191 751,191 751,190C751,189 759,185 765,184C769,183 771,182 771,182C771,181 771,180 771,179C771,177 771,177 769,178C766,180 765,178 768,176C770,174 776,172 779,172C779,172 780,170 780,169C782,163 789,150 794,144C799,138 810,130 811,131C811,132 810,135 808,139C804,149 803,156 803,165C803,173 804,173 809,172L812,171L809,171C807,170 805,169 805,169C805,167 809,168 816,170L823,172L828,169C831,168 834,166 834,165C835,165 836,164 836,164C838,164 837,168 835,170C833,173 833,174 839,172C844,170 846,170 846,171C846,172 845,172 844,172C838,172 857,177 868,178C878,179 879,179 881,181C881,182 883,184 884,184C885,185 885,186 885,187C884,187 883,187 883,186C883,185 882,185 882,185C881,185 882,187 883,189C886,194 889,193 893,184C898,175 899,165 898,157C898,154 898,151 899,151C900,151 906,161 908,168C912,179 911,204 907,210C906,211 906,211 910,211C914,210 916,211 913,212C912,213 912,213 914,214C918,217 921,230 918,230C917,230 917,228 917,226C917,224 916,222 914,220C911,217 907,216 909,218C910,219 910,220 910,221C910,223 910,224 911,223C912,223 913,224 914,226C916,233 923,239 927,237C928,237 929,237 929,238C929,238 927,239 925,240L920,241L922,245C924,250 924,252 923,257C922,261 920,261 920,257C920,253 918,249 915,247C914,245 913,245 913,251C913,254 913,258 913,260C912,261 912,266 911,270C911,273 910,278 909,279C907,282 904,283 905,280C907,277 907,272 906,272C906,272 905,271 905,270C905,269 905,269 904,270C903,271 903,272 904,273C904,274 903,275 902,276C901,278 900,279 901,281C901,283 900,284 898,282C897,280 896,280 893,283C887,286 885,286 885,282L886,280L884,282C882,284 882,284 883,286C884,288 885,289 886,289C887,289 888,289 888,290C888,291 886,291 884,291L880,290L880,294C880,296 881,300 882,302C884,307 883,309 877,312C875,313 873,315 873,317C872,318 871,321 871,322C870,325 870,325 872,324C875,324 891,321 897,320C900,320 901,320 902,322C904,323 911,329 918,335C941,356 948,362 950,365C950,367 954,377 957,389C960,400 964,411 964,413C966,417 966,417 962,426C958,434 942,475 928,510L923,522L880,523L838,524L880,524C919,524 922,524 922,526C922,530 922,529 924,524C929,510 956,442 961,432C963,426 968,415 971,408C975,398 977,393 979,392C981,390 986,390 1038,389C1070,388 1102,388 1110,388C1124,388 1125,389 1125,391C1125,392 1120,405 1114,420C1107,435 1095,465 1086,486C1078,508 1070,526 1070,527C1069,529 1071,529 1106,529C1138,529 1142,530 1142,531C1142,532 1082,533 601,533C241,533 60,533 60,532ZM539,527C538,526 538,524 538,524C538,523 538,523 537,524C535,525 536,529 538,529C539,529 539,528 539,527ZM574,520C574,518 575,517 578,516C582,513 583,514 579,518C577,520 576,522 576,522C576,523 576,523 575,523C574,523 574,522 574,520ZM564,508C566,505 567,497 567,497C566,497 565,499 564,501C564,503 562,506 560,508C557,512 554,517 554,519C554,520 563,511 564,508ZM371,501C370,495 368,493 365,489C361,485 356,476 356,473C356,471 355,471 352,472C350,472 348,472 347,470C346,469 345,469 345,469C344,469 342,474 338,479C335,484 330,492 327,495C325,499 323,502 323,503C323,503 327,502 331,500C341,497 340,497 356,503C364,506 371,508 372,508C372,508 372,506 371,501ZM856,503L863,500L860,498C858,497 854,495 853,494L849,492L846,499L842,506L846,506C848,505 853,504 856,503ZM537,482C539,476 541,470 541,470C541,469 539,472 538,476C537,480 534,487 532,492C531,497 529,501 529,502C529,503 533,493 537,482ZM202,479C202,479 202,478 204,478C205,478 205,478 204,477C203,476 203,476 201,478C200,479 199,480 198,480C197,480 197,480 198,481C201,482 203,481 202,479ZM449,454C450,450 450,450 449,452C448,453 448,458 448,463L447,472L448,464C448,461 449,456 449,454ZM589,460C590,460 590,458 590,456C590,455 590,454 591,454C592,454 592,458 591,460C591,461 590,462 590,462C589,462 589,461 589,460ZM922,456C921,452 922,447 926,444C928,441 928,441 928,434C927,431 927,426 926,424C926,422 926,421 928,419L931,416L930,407C927,383 925,378 918,375C916,374 911,373 908,373C903,372 899,370 890,363C883,359 883,359 884,364C884,368 884,369 882,371C880,373 879,375 879,375C878,377 874,378 874,376C874,375 874,375 873,376C872,376 871,377 869,377C868,377 867,376 867,372C866,366 866,365 863,367C862,368 860,369 859,369C857,369 857,369 857,366C858,365 857,362 857,360C856,356 857,351 859,346C859,345 858,345 856,347C852,352 848,351 834,344L824,339L821,341C819,343 814,351 814,353C814,353 817,355 820,357C828,361 831,364 833,371C835,378 837,380 849,382C864,384 868,387 872,398C874,403 883,414 890,417C896,421 898,424 899,433C900,440 903,444 907,444C911,444 915,447 917,451C919,455 922,459 923,459C923,459 922,458 922,456ZM552,434C554,427 554,422 555,412L555,400L554,412C553,423 552,428 547,445C546,449 545,454 545,454C545,456 548,446 552,434ZM455,444C455,444 456,443 455,443C455,442 456,441 457,440C460,439 466,430 465,429C464,429 464,429 464,430C464,431 463,431 463,431C462,430 461,431 460,432C460,434 457,438 455,441C452,444 450,448 450,448C450,449 451,448 452,447C452,445 454,444 455,444ZM467,415C466,412 466,409 465,409C465,410 465,413 466,417C466,421 467,424 467,423C467,422 467,419 467,415ZM580,401C577,395 577,396 579,403C579,407 580,411 580,412C580,414 581,413 581,410C581,406 581,403 580,401ZM461,399C459,396 457,393 456,393C455,393 449,379 448,374C447,372 447,371 446,371C446,371 446,367 446,362C446,351 445,352 445,364C444,373 444,374 445,374C446,374 447,375 447,376C447,379 454,393 458,397C460,399 462,402 463,404C464,406 465,407 465,407C465,406 463,403 461,399ZM571,359C571,358 570,356 567,355C565,354 563,353 562,353C562,354 565,364 567,367L568,370L570,366C570,363 571,360 571,359ZM405,361C405,360 406,360 407,360C410,360 411,357 409,356C408,355 408,354 408,353C409,352 408,352 407,352C405,352 404,354 406,354C407,355 406,359 405,359C404,359 404,358 404,358C404,357 404,357 403,358C402,360 402,362 404,362C404,362 405,362 405,361ZM387,355C384,353 385,350 387,348C388,347 389,346 389,345C390,344 390,344 390,344C391,344 391,346 390,348C389,349 389,352 390,353C390,356 389,357 387,355ZM567,345C564,340 558,333 553,331C553,330 554,333 556,336C558,340 560,344 561,346C562,349 563,350 566,352C571,354 571,353 567,345ZM533,308C531,305 530,304 532,304C533,304 537,308 537,309C537,311 535,310 533,308ZM450,260C452,257 449,256 446,259C444,261 443,262 443,262C443,263 449,262 450,260ZM522,251C519,248 442,204 441,204C441,205 445,207 450,210C461,216 505,241 515,247C522,252 524,253 522,251ZM419,193C418,190 373,170 371,171C371,171 376,174 382,176C388,178 399,183 406,187C421,195 420,194 419,193ZM881,189C881,189 880,187 878,186C876,184 875,183 872,183C869,183 868,183 869,184C870,184 871,185 871,185C872,186 879,190 880,190C881,190 881,190 881,189Z"/><path class="lav" fill-rule="evenodd" d="M186,482C178,479 171,469 171,460C171,456 174,448 175,448C175,448 176,447 176,446C177,444 186,439 187,440C187,441 187,441 186,442C181,445 180,456 183,463C184,466 185,468 185,469C186,470 189,472 192,473C198,475 200,475 208,473C212,473 212,474 208,478C206,480 205,481 203,480C200,480 200,480 200,482C200,484 199,484 195,484C192,484 188,483 186,482ZM385,329C384,327 384,327 387,325C389,324 392,323 395,323C403,323 421,314 434,303C439,299 439,299 436,295C435,294 434,292 434,291C434,290 434,289 433,289C432,288 431,282 432,282C433,282 433,281 433,280C433,279 433,278 432,278C431,278 432,272 433,271C434,271 434,270 434,269C434,266 438,261 443,259C447,256 447,256 447,251C445,242 443,229 441,226C441,225 440,222 440,221C440,220 440,219 439,218C438,218 438,217 438,216C438,215 438,214 437,214C436,214 436,213 436,212C436,211 436,210 435,210C435,210 433,207 431,204C427,196 418,188 412,185C406,183 406,182 412,182C430,185 448,211 454,245L455,255L460,257C464,259 469,264 469,266C469,266 469,267 470,267C473,267 474,282 472,288C469,295 461,303 455,303C454,303 453,304 453,307C452,312 450,312 449,307C449,304 448,303 444,302L440,301L431,308C422,314 403,325 400,325C400,325 399,325 399,326C399,327 391,331 388,331C386,331 385,330 385,329ZM462,296C471,290 473,281 469,271C467,265 460,260 453,261C450,262 449,262 449,261C449,260 448,259 448,259C446,259 445,262 447,262C448,263 448,263 446,264C440,269 438,282 441,290C445,298 455,301 462,296ZM451,288C450,288 449,286 449,285C449,285 449,284 448,284C447,284 447,277 448,274C450,272 455,268 456,269C456,270 455,271 454,273C450,278 453,286 461,286C463,286 464,288 461,289C458,290 454,290 451,288Z"/><path class="ember" fill-rule="evenodd" d="M1026,474C1025,468 1020,462 1017,462C1016,462 1015,462 1015,461C1015,460 1016,460 1017,460C1022,460 1029,454 1032,446C1035,441 1036,441 1036,446C1036,453 1038,457 1042,459C1046,461 1046,462 1042,463C1038,464 1033,469 1030,474C1029,477 1027,479 1027,479C1027,479 1026,477 1026,474ZM828,330C825,328 818,322 819,321C820,321 828,323 832,325C836,327 837,329 835,331C833,332 833,332 828,330ZM772,295C765,293 757,281 757,272C757,267 759,269 759,275C761,291 781,296 789,281C796,267 785,249 771,254C767,255 760,262 760,265C760,265 760,266 759,266C758,266 759,263 761,259C764,253 769,249 775,248C778,247 779,247 780,240C782,232 786,222 787,222C788,222 790,215 790,213C790,212 789,212 788,212C784,212 779,197 779,183C779,168 784,155 794,144C799,138 810,130 811,131C811,132 810,135 808,139C802,154 801,172 806,183C809,189 809,189 817,185C823,181 836,179 836,182C836,182 835,183 833,183C828,183 819,189 813,195C810,198 807,202 807,202C807,203 805,206 803,209C801,211 798,215 797,218C796,220 794,222 794,222C793,222 793,223 793,224C793,225 792,229 790,233C789,238 788,243 787,245C787,249 787,250 790,252C792,253 794,256 796,259C801,268 799,283 792,289C791,290 790,292 790,293C790,295 789,296 783,296C779,296 774,295 772,295ZM902,210C901,210 900,209 900,208C900,207 899,205 898,204C894,203 887,196 889,195C889,195 890,194 890,193C890,192 892,188 893,184C898,175 899,166 899,157C898,154 898,151 899,151C900,151 906,161 908,168C911,176 912,193 910,201C909,204 908,207 907,207C906,207 906,208 906,209C906,210 906,211 905,211C905,211 904,211 902,210Z"/></svg></figure>
+      <p class="eyebrow" style="text-align:center">A call center cryptid experience · Halloween 2026</p>
+      <h1 class="title" style="text-align:center"><span class="soft">The Haunted</span><em>Headset</em></h1>
+      <p class="sub" style="text-align:center">Eight calls. One mortal headset. Questionable spiritual protection.</p>
+      <div class="script">
+        <span class="lbl">Your script, possessed</span>
+        “Good evening, mortal. Thank you for calling the Astral Queue. Before I can assist you, please speak your first name, last name, date of birth, and the last four digits of your soul.”
+      </div>
+      <p>The hold music never ends here. Each call tests your instincts while three meters watch you: <b>Sanity</b>, <b>Adherence</b>, and <b>Hold Time</b>. Survive all eight and learn which cryptid you have become.</p>
+      <div class="row">
+        <button class="btn" id="start">Answer the call</button>
+        <button class="btn purple" id="toDj">Spin the deck</button>
+        <button class="btn ghost" id="toBingo">Haunted Bingo</button>
+      </div>
+      <p class="fine">Every caller here is fictional. No real members, no real data. A game, not training.</p>
+    </div>
+  </section>
+
+  <!-- TRIAL -->
+  <section class="screen" id="trial" hidden>
+    <div class="progress" id="progress"></div>
+    <div class="meters" id="meters"></div>
+    <div class="card">
+      <span class="caller" id="caller"></span>
+      <h2 class="trial-name" id="tname"></h2>
+      <p class="scene" id="scene"></p>
+      <div class="choices" id="choices"></div>
+      <div class="verdict" id="verdict" hidden>
+        <p id="vtext"></p>
+        <div class="deltas" id="deltas"></div>
+        <span class="ghostline" id="ghost" hidden>The Threshold Ghost stirs. Your hold time is getting noticed.</span>
+        <div><button class="btn" id="next">Next call</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="result" hidden>
+    <div class="card stack">
+      <p class="eyebrow" style="text-align:center">Cryptid classification complete</p>
+      <div class="sigil" id="rsig"></div>
+      <h2 class="res-name" id="rname"></h2>
+      <p class="res-tag" id="rtag"></p>
+      <div class="score">
+        <div><span class="eyebrow">Soul Score (EPS)</span><br><b id="rscore">0</b></div>
+        <div class="r"><span class="eyebrow" id="rgrade"></span><br><span class="fine" id="rmeters"></span></div>
+      </div>
+      <p id="rdesc"></p>
+      <div class="facts">
+        <div class="fact"><span class="eyebrow">Dark gift</span><span id="rgift"></span></div>
+        <div class="fact"><span class="eyebrow">Survival strategy</span><span id="rstrat"></span></div>
+      </div>
+      <div class="prophecy"><span class="eyebrow" style="display:block;margin-bottom:6px">Prophecy for your next shift</span><span id="rproph"></span></div>
+      <p class="ghostline" id="rghost" hidden></p>
+      <div class="row">
+        <button class="btn" id="share">Copy my result</button>
+        <button class="btn ghost" id="retake">Retake</button>
+        <button class="btn ghost" id="toBingo2">Haunted Bingo</button>
+        <button class="btn purple" id="toDj2">Spin the deck</button>
+      </div>
+      <span class="copied" id="copied" hidden>Copied. Paste it in the group chat.</span>
+    </div>
+  </section>
+
+  <!-- DJ DECK -->
+  <section class="screen" id="dj" hidden>
+    <div class="card stack">
+      <div class="stripe" aria-hidden="true"></div>
+      <p class="eyebrow">Break room booth · Side A</p>
+      <h2 style="font-family:var(--f-loud); color:var(--orange); font-size:clamp(28px,8vw,38px); text-shadow:2px 2px 0 #5b3a8c">DJ Spooky Shift</h2>
+      <p>Build a haunted beat. Each channel is a layer of the track and a piece of your call. Pick a pad, ride the faders, then drop the mix to get your call's remix.</p>
+      <div class="deck" id="deck">
+        <div class="booth">
+          <div class="platter"><span class="base"></span><div class="vinyl"><svg id="record" viewBox="-110 -110 220 220" aria-hidden="true"></svg></div></div>
+          <div class="booth-copy">
+            <div class="bpm" id="bpm">104 <small>BPM</small></div>
+            <div class="leds" id="leds"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="transport">
+              <button class="tbtn" id="play" aria-pressed="false">▶ Play loop</button>
+              <button class="tbtn" id="tempo">Tempo: normal</button>
+            </div>
+          </div>
+        </div>
+        <div id="channels"></div>
+      </div>
+      <div class="row"><button class="btn" id="drop">Drop the mix</button><button class="btn ghost" id="djBack">Back</button></div>
+      <div class="mixcard" id="mix" hidden>
+        <span class="eyebrow">Your call, remixed</span>
+        <h3 id="mixTitle"></h3>
+        <p class="story" id="mixStory"></p>
+        <div class="stats">
+          <div class="stat"><b id="stSpook">0</b><span>Spooky</span></div>
+          <div class="stat"><b id="stChaos">0</b><span>Chaos</span></div>
+          <div class="stat"><b id="stPro">0</b><span>Composure</span></div>
+        </div>
+        <div class="dare"><span class="eyebrow">Your shift dare</span><span id="mixDare"></span></div>
+        <div class="row"><button class="btn purple" id="copyMix">Copy my mix</button><button class="btn ghost" id="remix">Shuffle pads</button></div>
+        <span class="copied" id="mixCopied" hidden>Copied. Send it to the team chat.</span>
+      </div>
+    </div>
+  </section>
+  <!-- BINGO -->
+  <section class="screen" id="bingo" hidden>
+    <div class="card stack">
+      <div class="stripe" aria-hidden="true"></div>
+      <p class="eyebrow">Play during a real shift</p>
+      <h2 style="font-family:var(--f-loud); color:var(--orange); font-size:clamp(28px,8vw,38px); text-shadow:2px 2px 0 #5b3a8c">Haunted Call Bingo</h2>
+      <p>Tap a square when it happens on your shift. Five in a row and you win absolutely nothing except bragging rights in the team chat.</p>
+      <p class="banner" id="bwin" hidden>BINGO. The queue fears you now.</p>
+      <div class="grid" id="grid" lang="en"></div>
+      <div class="row">
+        <button class="btn ghost" id="shuffle">New card</button>
+        <button class="btn ghost" id="clear">Clear marks</button>
+        <button class="btn" id="back">Back to the queue</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const CRYPTIDS = {
+  nec:{name:"The Hold-Time Necromancer", sig:"☠", tag:"Raises dead workflows before the screen finishes loading.",
+    desc:"You see three steps ahead. While the caller is still explaining, you already have the right screen open, the next step queued, and a backup plan rising from the grave.",
+    gift:"Finding the answer before the hold music hits its second loop.",
+    strat:"Keep every tab you might need open at all times. Fear nothing. Trust the shortcut.",
+    proph:"A call will arrive that should take twenty minutes. You will finish it in six and tell no one how."},
+  vam:{name:"The Verification Vampire", sig:"⚰", tag:"No identifiers, no entry. The ritual has rules.",
+    desc:"First name, last name, date of birth, last four. You will get them, and you will get them warmly. A caller's autobiography is lovely, but it does not open the crypt.",
+    gift:"Redirecting a rambling caller so smoothly they think it was their idea.",
+    strat:"Ask once with kindness, ask twice with clarity, then wait in the silence. They always crack.",
+    proph:"Someone will try to give you their entire social. You will stop them at digit three like a hero."},
+  wit:{name:"The De-escalation Witch", sig:"✶", tag:"Voice calm. Boundaries intact. Inner monologue sealed.",
+    desc:"Angry callers enter your circle and leave thanking you. Nobody knows what you say in your head, and that knowledge stays forbidden.",
+    gift:"Turning a caller's storm into a calm next step without raising your voice once.",
+    strat:"Name the feeling, name what you can do, then do it. Hex nobody. Out loud.",
+    proph:"A caller who opened with a curse word will close with 'you've been so sweet.' You will accept this tribute."},
+  por:{name:"The Transfer Portal Guardian", sig:"⛩", tag:"Every handoff gets a destination and a reason.",
+    desc:"You know exactly who handles what. Nurse questions go to nurses, provider questions go to providers, and nobody vanishes into a transfer void on your watch.",
+    gift:"Explaining a transfer so clearly the caller never has to repeat their story.",
+    strat:"Say who, say why, then open the portal. Clean handoffs only.",
+    proph:"A transfer will bounce back to you. You will receive it with the calm of someone who has seen this before."},
+  exo:{name:"The Frozen Screen Exorcist", sig:"✠", tag:"Stares into the frozen screen and whispers, there has to be another way.",
+    desc:"The system has moods. You know them all. You have refreshed, re-logged, and spoken softly to a loading wheel, and somehow it always listens to you.",
+    gift:"Getting the interface to cooperate through sheer spiritual force.",
+    strat:"Save your notes early. Save them often. Keep a candle lit for the server.",
+    proph:"The system will freeze at the worst possible moment. You will banish it with one refresh and a deep breath."},
+  sur:{name:"The Queue Survivor", sig:"☾", tag:"Has witnessed things. Has closed the call. Is still logged in.",
+    desc:"You have heard every story, every excuse, and every dog barking in the background. Nothing on a call can surprise you now, and you still say 'have a great day' like you mean it.",
+    gift:"Bouncing back from the wildest call of the week in under ten seconds.",
+    strat:"Breathe between calls. Cold coffee counts as coffee. Snacks are armor.",
+    proph:"You will hear a story on a call so wild it becomes break room legend by Friday."}
+};
+
+const TRIALS = [
+ {name:"The Summoning", caller:"Incoming · 0:00 into your shift",
+  scene:"You just sat down. Your coffee is too hot. The light blinks red before your headset is fully on your head.",
+  opts:[
+   {t:"Swallow the coffee, smile so they can hear it, deliver the full greeting.", c:"wit", d:{san:-5,adh:5}, v:"Scalded tongue. Flawless greeting. The caller thinks you're a morning person. Let them believe."},
+   {t:"You already had the verification fields open. You were ready before it rang.", c:"vam", d:{adh:10}, v:"The cursor was blinking, hungry. You knew it would come."},
+   {t:"Perfect greeting out loud. Silent screaming inside.", c:"sur", d:{san:-10}, v:"Nobody heard the scream. That's professionalism."},
+   {t:"The headset crackles with ancient hold music. You greet anyway: 'Good morning... evening? Time means nothing here.'", c:"exo", d:{san:-5,hold:5}, v:"The caller didn't notice. The headset did."}]},
+ {name:"The Rambling Banshee", caller:"Caller type · Banshee",
+  scene:"You ask for her name and date of birth. She starts with her grandmother's maiden name and is now describing a cruise from 2019.",
+  opts:[
+   {t:"Warmly redirect: 'I want to help with this. Can I get your first and last name and date of birth first?'", c:"vam", d:{adh:10,hold:-5}, v:"Redirected with love. The cruise will have to wait for another rep."},
+   {t:"Wait politely for her to take a breath. Then strike.", c:"sur", d:{hold:15,san:-5}, v:"She did not breathe for four minutes. You did not either."},
+   {t:"Catch the details she drops in the story and confirm them back to her.", c:"nec", d:{adh:5}, v:"Name found in paragraph two. Date of birth buried in paragraph five. Ritual complete."},
+   {t:"Start typing the cruise into your notes out of respect.", c:"exo", d:{san:5,hold:10}, v:"Your notes now contain the buffet hours of a ship that no longer exists."}]},
+ {name:"The Endless Oracle", caller:"Request · Speak to a nurse",
+  scene:"He needs a nurse. Simple transfer. Before you can explain, he begins his health history at the year 1997.",
+  opts:[
+   {t:"Let him know who you're connecting him to and why, then make a clean handoff.", c:"por", d:{adh:10}, v:"Destination named. Reason given. Portal opened. Nobody vanished."},
+   {t:"Summarize kindly: 'So you'd like to speak with a nurse about this. Let me get you connected.'", c:"wit", d:{adh:5,hold:-5}, v:"He felt heard in one sentence. That's witchcraft."},
+   {t:"Listen respectfully. The story now includes a 1997 ice storm.", c:"sur", d:{hold:20,san:-5}, v:"You know his whole family tree now. It has many branches."},
+   {t:"You queued the transfer in another window the second he said 'nurse.' You're just waiting for a pause.", c:"nec", d:{adh:5}, v:"The portal hummed in the background, patient as a ghost."}]},
+ {name:"The Profanity Poltergeist", caller:"Caller type · Poltergeist",
+  scene:"Loud. Unseen. Throwing words you can't repeat at the break room table. None of this is your fault.",
+  opts:[
+   {t:"Keep your voice calm, acknowledge the frustration, and steer to what you can actually do.", c:"wit", d:{san:-10,adh:5}, v:"The storm passed around your circle. You didn't even flinch on the outside."},
+   {t:"Pull up your center's procedure for abusive language and follow it step by step.", c:"exo", d:{adh:10}, v:"The procedure is your holy text. You read it with conviction."},
+   {t:"Take a half-second breath, then return in full customer service voice.", c:"sur", d:{san:5}, v:"One breath. Infinite power. Your voice could sell a haunted house."},
+   {t:"Give one real attempt to help, then request a supervisor handoff the approved way.", c:"por", d:{adh:5,hold:5}, v:"Some spirits need a higher authority. You knew when to open that door."}]},
+ {name:"The Hold-Time Haunting", caller:"Hold clock · ticking",
+  scene:"You need to look something up. The hold clock starts glowing in your peripheral vision. The threshold is watching.",
+  opts:[
+   {t:"Ask before placing them on hold, give a time estimate, and check back on time.", c:"por", d:{adh:10,hold:5}, v:"They knew where they were going and when you'd be back. Textbook."},
+   {t:"Talk through your search out loud so you don't need hold at all.", c:"wit", d:{hold:-5,san:-5}, v:"'Still here, just pulling that up for you.' A spell as old as the queue itself."},
+   {t:"The loading wheel spins. You whisper an incantation at it.", c:"exo", d:{hold:15}, v:"It worked eventually. You'll never know if it was you."},
+   {t:"Double-check you have the right member pulled up before you search anything.", c:"vam", d:{adh:5,hold:5}, v:"Wrong record avoided. Several future headaches never born."}]},
+ {name:"The Prescription Portal", caller:"Request · Medication refill",
+  scene:"A refill request. The caller pronounces the medication like a spell from an old book, and the pharmacy on file looks suspicious.",
+  opts:[
+   {t:"Spell the medication back, confirm the pharmacy, and route the request the approved way.", c:"vam", d:{adh:10}, v:"Every detail confirmed. The refill passes through the veil intact."},
+   {t:"They say 'the little white one.' You kindly ask them to read the label on the bottle.", c:"nec", d:{adh:5,hold:5}, v:"The little white one has a name. You summoned it."},
+   {t:"The pharmacy on file closed in 2019. You update it with them.", c:"exo", d:{hold:10,adh:5}, v:"You exorcised a ghost pharmacy from the record. It may haunt someone else."},
+   {t:"They want you to approve it yourself. You explain the provider team handles that and send it to them.", c:"por", d:{adh:10}, v:"Not your power to grant. You sent it to the ones who hold it."}]},
+ {name:"The Labyrinth of Lab Results", caller:"Request · Lab or MRI question",
+  scene:"'I can see my MRI results. Can you just tell me what they mean?' The words on the screen look like ancient runes.",
+  opts:[
+   {t:"Explain that's outside your role and offer to connect them with a nurse or send a message to their provider.", c:"por", d:{adh:10}, v:"You guided them out of the labyrinth to someone holding the real map."},
+   {t:"Stare at the runes for a second. Then remember: not your job, and thank goodness.", c:"sur", d:{san:-5,adh:5}, v:"You looked into the abyss. The abyss had a lot of medical terms."},
+   {t:"Offer to schedule a follow-up so their provider can walk them through it.", c:"nec", d:{adh:5}, v:"An appointment rises from nothing. The answers will come from the right person."},
+   {t:"Set the boundary gently: 'I'm not able to read those for you, but here's who can.'", c:"wit", d:{adh:5,san:5}, v:"Firm and kind at once. The rarest magic."}]},
+ {name:"The Notes Field Specter", caller:"Wrap-up · The call is over",
+  scene:"The caller hung up. You are not free. The notes field waits, empty and pale, and the next call is already blinking.",
+  opts:[
+   {t:"Write clear, accurate notes and wrap up fast.", c:"vam", d:{adh:10}, v:"Short, complete, correct. Future reps will speak your name with reverence."},
+   {t:"You built a template for this exact call weeks ago. Done in seconds.", c:"nec", d:{adh:5,hold:-5}, v:"Your past self left you a gift from beyond."},
+   {t:"The notes start writing themselves. You read them. They say 'help.'", c:"exo", d:{san:-10}, v:"You saved them anyway. The system accepts all offerings."},
+   {t:"Finish the notes, sip your cold coffee, and take the next call.", c:"sur", d:{san:-5}, v:"Cold coffee. Warm heart. Still logged in."}]}
+];
+
+const $ = id => document.getElementById(id);
+const screens = ["intro","trial","result","bingo","dj"];
+let state, lastScreen = "intro";
+
+function fresh(){ return {i:0, san:100, adh:70, hold:0, tally:{}, order:[]}; }
+function show(s){ screens.forEach(x => $(x).hidden = x !== s); if(s!=="bingo" && s!=="dj") lastScreen = s; window.scrollTo({top:0, behavior:"smooth"}); }
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+function renderMeters(){
+  const h = clamp(state.hold,0,100);
+  $("meters").innerHTML =
+    `<div class="m san"><div class="top"><span>Sanity</span><span>${state.san}</span></div><div class="bar"><i style="width:${state.san}%"></i></div></div>`+
+    `<div class="m adh"><div class="top"><span>Adherence</span><span>${state.adh}</span></div><div class="bar"><i style="width:${state.adh}%"></i></div></div>`+
+    `<div class="m hold${h>=50?' danger':''}"><div class="top"><span>Hold</span><span>${h}</span></div><div class="bar"><i style="width:${h}%"></i></div></div>`;
+  $("progress").innerHTML = TRIALS.map((_,k)=>`<span class="${k<=state.i?'on':''}"></span>`).join("");
+}
+
+function renderTrial(){
+  const t = TRIALS[state.i];
+  $("caller").textContent = `Call ${state.i+1} of 8 · ${t.caller}`;
+  $("tname").textContent = t.name;
+  $("scene").textContent = t.scene;
+  $("verdict").hidden = true; $("ghost").hidden = true;
+  $("choices").innerHTML = "";
+  t.opts.forEach((o,k)=>{
+    const b = document.createElement("button");
+    b.className = "choice"; b.id = `choice-${k}`;
+    b.innerHTML = `<span class="k">${"ABCD"[k]}</span><span>${o.t}</span>`;
+    b.onclick = () => pick(k);
+    $("choices").appendChild(b);
+  });
+  $("next").textContent = state.i === TRIALS.length-1 ? "Reveal my cryptid" : "Next call";
+  renderMeters();
+}
+
+function pick(k){
+  const o = TRIALS[state.i].opts[k];
+  document.querySelectorAll(".choice").forEach((b,j)=>{ b.disabled = true; if(j===k) b.classList.add("picked"); });
+  state.tally[o.c] = (state.tally[o.c]||0) + 1; state.order.push(o.c);
+  const d = o.d, chips = [];
+  if(d.san){ state.san = clamp(state.san+d.san,0,100); chips.push(`<span class="${d.san>0?'good':'bad'}">Sanity ${d.san>0?'+':''}${d.san}</span>`); }
+  if(d.adh){ state.adh = clamp(state.adh+d.adh,0,100); chips.push(`<span class="${d.adh>0?'good':'bad'}">Adherence ${d.adh>0?'+':''}${d.adh}</span>`); }
+  if(d.hold){ state.hold = Math.max(0,state.hold+d.hold); chips.push(`<span class="${d.hold<0?'good':'bad'}">Hold ${d.hold>0?'+':''}${d.hold}</span>`); }
+  $("vtext").textContent = o.v;
+  $("deltas").innerHTML = chips.join("");
+  $("ghost").hidden = state.hold < 50;
+  $("verdict").hidden = false;
+  renderMeters();
+  $("next").focus({preventScroll:true});
+}
+
+function finish(){
+  const max = Math.max(...Object.values(state.tally));
+  const tied = Object.keys(state.tally).filter(c => state.tally[c] === max);
+  let win = tied[0];
+  for(let j=state.order.length-1;j>=0;j--){ if(tied.includes(state.order[j])){ win = state.order[j]; break; } }
+  const c = CRYPTIDS[win];
+  const score = Math.round((state.san + state.adh + (100 - clamp(state.hold,0,100))) / 3);
+  const grade = score>=85 ? "Legend of the floor" : score>=70 ? "Meets spectral expectations" : score>=55 ? "Haunted but holding on" : "Needs a long break and snacks";
+  $("rsig").textContent = c.sig; $("rname").textContent = c.name; $("rtag").textContent = c.tag;
+  $("rdesc").textContent = c.desc; $("rgift").textContent = c.gift; $("rstrat").textContent = c.strat; $("rproph").textContent = c.proph;
+  $("rscore").textContent = score; $("rgrade").textContent = grade;
+  $("rmeters").textContent = `Sanity ${state.san} · Adherence ${state.adh} · Hold ${clamp(state.hold,0,100)}`;
+  const g = $("rghost");
+  if(state.hold >= 50){ g.hidden = false; g.textContent = "The Threshold Ghost followed you home. Your hold time was noticed in the spirit realm."; }
+  else g.hidden = true;
+  state.result = {c, score, grade};
+  $("copied").hidden = true;
+  show("result");
+}
+
+$("start").onclick = () => { state = fresh(); renderTrial(); show("trial"); };
+$("next").onclick = () => { if(state.i < TRIALS.length-1){ state.i++; renderTrial(); window.scrollTo({top:0,behavior:"smooth"}); } else finish(); };
+$("retake").onclick = () => { state = fresh(); renderTrial(); show("trial"); };
+$("share").onclick = () => {
+  const r = state.result;
+  const text = `🎃 The Haunted Headset\nI am ${r.c.name}. ${r.c.tag}\nSoul Score (EPS): ${r.score}, ${r.grade}\nProphecy: ${r.c.proph}`;
+  const ok = () => { $("copied").hidden = false; };
+  try{
+    navigator.clipboard.writeText(text).then(ok).catch(fallback);
+  }catch(e){ fallback(); }
+  function fallback(){
+    const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); ok(); }catch(_){}
+    ta.remove();
+  }
+};
+
+/* ---------- Bingo ---------- */
+const SQUARES = [
+ "“I'll be quick.” It's been 22 minutes","Gives every number except the last four","Asks for a supervisor during “Good morning”","Caller is clearly at a car wash","“Just read me my MRI real quick”","Transfer boomerangs right back to you","Spells name: “B as in... um... B”","“The little white pill” (they're all white)","The system freezes. You age three years","“Am I talking to a real person?” Barely","Calls about a refill that went through yesterday","“So, long story...” It was","A dog takes over the call","Cussed out, still said “have a blessed day”","You hear snoring on hold","“The last rep said...” They did not","DOB given in three different formats","Back-to-back calls. Bladder on hold","Adherence alert mid-sip of water","Pharmacy on file closed in 2014","Caller orders a #4 combo while verifying","“I've been on hold for HOURS” (2 min)","Sweet caller calls you “baby.” Healed","You talk for 30 seconds on mute","Caller puts YOU on hold","Kid in the background yelling the DOB","You say “perfect” 14 times in one call","Hold music skips. The ghosts are restless"
+];
+const ALWAYS = ["Supervisor calls you on Teams. Heart rate: 140", "Pulled into coaching. Pray for me", "“Have you looked at the job aid?”", "“You've been on personal for 20 minutes”", "VPN is still reconnecting...", "“Call IT.”"];
+const FREE = "Free · The hold music never ends";
+let card = [], marks = [];
+const KEY = "haunted-headset-bingo-v6";
+
+function shuffleCard(){
+  const s = SQUARES.slice();
+  for(let i=s.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [s[i],s[j]]=[s[j],s[i]]; }
+  card = s.slice(0,24-ALWAYS.length); ALWAYS.forEach(a => card.splice(Math.floor(Math.random()*(card.length+1)),0,a)); card.splice(12,0,FREE);
+  marks = card.map((_,i)=> i===12);
+  save();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({card,marks})); }catch(e){} }
+function load(){
+  try{ const d = JSON.parse(localStorage.getItem(KEY)||"null"); if(d && d.card && d.card.length===25){ card=d.card; marks=d.marks; return true; } }catch(e){}
+  return false;
+}
+const LINES = (()=>{ const L=[]; for(let r=0;r<5;r++) L.push([0,1,2,3,4].map(c=>r*5+c)); for(let c=0;c<5;c++) L.push([0,1,2,3,4].map(r=>r*5+c)); L.push([0,6,12,18,24],[4,8,12,16,20]); return L; })();
+function renderGrid(){
+  const wins = new Set(); LINES.forEach(l => { if(l.every(i=>marks[i])) l.forEach(i=>wins.add(i)); });
+  $("grid").innerHTML = "";
+  card.forEach((txt,i)=>{
+    const b = document.createElement("button");
+    b.id = `cell-${i}`;
+    b.className = "cell" + (marks[i]?" on":"") + (i===12?" free":"") + (wins.has(i)?" win":"");
+    b.textContent = txt; b.setAttribute("aria-pressed", marks[i]);
+    if(i!==12) b.onclick = () => { marks[i] = !marks[i]; save(); renderGrid(); };
+    $("grid").appendChild(b);
+  });
+  const WINS=["BINGO. The queue fears you now.","BINGO. Log off. Spiritually.","BINGO. Your supervisor is calling to congratulate you.","BINGO. Your headset is glowing.","BINGO. Hold music plays in your honor."];
+  if(wins.size && $("bwin").hidden) $("bwin").textContent = WINS[Math.floor(Math.random()*WINS.length)];
+  $("bwin").hidden = wins.size === 0;
+}
+function openBingo(){ if(!card.length && !load()) shuffleCard(); renderGrid(); show("bingo"); }
+$("toBingo").onclick = openBingo; $("toBingo2").onclick = openBingo;
+$("shuffle").onclick = () => { shuffleCard(); renderGrid(); };
+$("clear").onclick = () => { marks = card.map((_,i)=>i===12); save(); renderGrid(); };
+$("back").onclick = () => show(lastScreen === "bingo" ? "intro" : lastScreen);
+
+
+/* ---------- DJ studio ---------- */
+const CHANNELS = [
+ {id:"caller", name:"The Caller", layer:"Drums", vol:80, pads:[
+   {k:"banshee", l:"Banshee", short:"Banshee", line:"a caller who answered “date of birth” with the story of her cousin's wedding"},
+   {k:"polter", l:"Polter&shy;geist", short:"Poltergeist", line:"a caller throwing words you can't repeat at the potluck"},
+   {k:"oracle", l:"Oracle", short:"Oracle", line:"a caller who started his story in 1997 and kept going"},
+   {k:"sweet", l:"Sweetheart", short:"Sweetheart", line:"the sweetest caller of the week, who asked how your day was going"}]},
+ {id:"req", name:"The Request", layer:"Bass", vol:70, pads:[
+   {k:"refill", l:"Refill", short:"Refill", line:"needed a refill for “the little white one”"},
+   {k:"labs", l:"Lab / MRI", short:"Lab Results", line:"wanted you to read their MRI like a deck of tarot cards"},
+   {k:"transfer", l:"Transfer", short:"Transfer", line:"just needed a transfer to a nurse, eventually"},
+   {k:"sched", l:"Schedule", short:"Scheduling", line:"wanted the one appointment slot that does not exist"}]},
+ {id:"energy", name:"Your Energy", layer:"Organ", vol:55, pads:[
+   {k:"calm", l:"Calm witch", remix:"Candlelight", line:"You kept your voice soft as candlelight", pro:25},
+   {k:"coffee", l:"Cold coffee", remix:"Cold Coffee", line:"You ran on cold coffee and pure adrenaline", pro:10},
+   {k:"chaos", l:"Chaos mode", remix:"Inner Scream", line:"Your inner monologue screamed in three languages while your voice stayed sweet", pro:0},
+   {k:"zen", l:"Seen it all", remix:"Survivor", line:"You floated above it like a ghost who has seen things", pro:20}]},
+ {id:"twist", name:"Plot Twist", layer:"Lead", vol:60, pads:[
+   {k:"freeze", l:"System freezes", line:"Then the system froze mid-note.", dare:"Save your notes early on every call today. Exorcise the freeze before it happens."},
+   {k:"hold", l:"Hold timer glows", line:"Then the hold timer started glowing in your peripheral vision.", dare:"Check back with every caller on hold right on time today. Beat the Threshold Ghost."},
+   {k:"sup", l:"Supervisor appears", line:"Then a supervisor materialized behind your chair.", dare:"Tell your lead one thing that went well on a call today. Haunt them with good news."},
+   {k:"dog", l:"Dog joins call", line:"Then the caller's dog joined the call and took over the conversation.", dare:"Share your funniest background noise story with the rep next to you at break."}]}
+];
+const picks = {caller:0, req:0, energy:0, twist:0};
+const vols = {}; CHANNELS.forEach(c => vols[c.id] = c.vol);
+
+/* record art */
+(function drawRecord(){
+  const n=12, R=100, seg=360/n, cols=["#ffad80","#140d18","#c7a6ff","#140d18"];
+  const pt=(a,r)=>{const t=(a-90)*Math.PI/180; return [(r*Math.cos(t)).toFixed(2),(r*Math.sin(t)).toFixed(2)];};
+  let g="";
+  for(let i=0;i<n;i++){ const [x0,y0]=pt(i*seg,R),[x1,y1]=pt((i+1)*seg,R);
+    g+=`<path d="M0,0L${x0},${y0}A${R},${R} 0 0 1 ${x1},${y1}Z" fill="${cols[i%4]}" stroke="#2a1f33" stroke-width="1"/>`; }
+  for(let r=40;r<100;r+=5) g+=`<circle r="${r}" fill="none" stroke="#000" stroke-opacity=".16" stroke-width=".7"/>`;
+  g+=`<circle r="34" fill="#140d18" stroke="#c7a6ff" stroke-width="2"/><circle r="27" fill="#ffad80"/>`;
+  g+=`<text y="-3" fill="#140d18" font-family="Bowlby One, Impact, sans-serif" font-size="9" text-anchor="middle">HAUNTED</text>`;
+  g+=`<text y="8" fill="#140d18" font-family="Bowlby One, Impact, sans-serif" font-size="9" text-anchor="middle">HEADSET</text>`;
+  g+=`<circle r="2.5" fill="#140d18"/>`;
+  $("record").innerHTML=g;
+})();
+
+/* channel strips */
+function renderChannels(){
+  $("channels").innerHTML = CHANNELS.map(c => `
+    <div class="chan" id="ch-${c.id}">
+      <div class="chan-head"><b>${c.name}</b><span>${c.layer}</span></div>
+      <div class="pads">${c.pads.map((p,i)=>`<button class="pad" id="pad-${c.id}-${i}" data-ch="${c.id}" data-i="${i}" aria-pressed="${picks[c.id]===i}">${p.l}</button>`).join("")}</div>
+      <div class="fader-row">
+        <input type="range" id="fader-${c.id}" data-ch="${c.id}" min="0" max="100" value="${vols[c.id]}" aria-label="${c.layer} volume">
+        <div class="meter" id="meter-${c.id}" aria-hidden="true">${"<i></i>".repeat(6)}</div>
+      </div>
+    </div>`).join("");
+  document.querySelectorAll(".pad").forEach(b => b.onclick = () => {
+    picks[b.dataset.ch] = +b.dataset.i;
+    document.querySelectorAll(`.pad[data-ch="${b.dataset.ch}"]`).forEach(x => x.setAttribute("aria-pressed", x===b));
+    padBlip(b.dataset.ch);
+  });
+  document.querySelectorAll('input[type=range][data-ch]').forEach(r => r.oninput = () => { vols[r.dataset.ch] = +r.value; applyVols(); });
+}
+renderChannels();
+
+/* audio engine */
+let AC=null, master=null, bus={}, noiseBuf=null, playing=false, step=0, nextT=0, timer=null, tempoIdx=0;
+const TEMPOS=[{n:"normal",bpm:104},{n:"rush hour",bpm:124},{n:"hold music",bpm:84}];
+const D2=73.42, f=(st,base=D2)=>base*Math.pow(2,st/12);
+function ensureAudio(){
+  if(AC) return true;
+  try{
+    AC = new (window.AudioContext||window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value=.8;
+    const comp = AC.createDynamicsCompressor(); master.connect(comp).connect(AC.destination);
+    CHANNELS.forEach(c => { bus[c.id]=AC.createGain(); bus[c.id].connect(master); });
+    noiseBuf = AC.createBuffer(1, AC.sampleRate*.5, AC.sampleRate);
+    const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    applyVols(); return true;
+  }catch(e){ return false; }
+}
+function applyVols(){ if(!AC) return; CHANNELS.forEach(c => bus[c.id].gain.setTargetAtTime(Math.pow(vols[c.id]/100,1.6), AC.currentTime, .03)); }
+function kick(t,out,v=1){ const o=AC.createOscillator(), g=AC.createGain(); o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(42,t+.16);
+  g.gain.setValueAtTime(.9*v,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); o.connect(g).connect(out); o.start(t); o.stop(t+.32); }
+function noise(t,out,type,freq,dur,v){ const s=AC.createBufferSource(); s.buffer=noiseBuf; const fl=AC.createBiquadFilter(); fl.type=type; fl.frequency.value=freq;
+  const g=AC.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); s.connect(fl).connect(g).connect(out); s.start(t); s.stop(t+dur+.02); }
+function tone(t,out,freq,dur,v,type="triangle",cut=2400){ const o=AC.createOscillator(), fl=AC.createBiquadFilter(), g=AC.createGain(); o.type=type; o.frequency.value=freq;
+  fl.type="lowpass"; fl.frequency.value=cut; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(fl).connect(g).connect(out); o.start(t); o.stop(t+dur+.02); }
+
+const DRUMS = { // k=kick s=clap h=hat per 16 steps
+  banshee:{k:"x...x...x...x...", s:"....x.......x...", h:"..x...x...x...x."},
+  polter: {k:"x..x..x...x..x..", s:"....x..x....x.xx", h:"xxxxxxxxxxxxxxxx"},
+  oracle: {k:"x.........x.....", s:"........x.......", h:"x...x...x...x..."},
+  sweet:  {k:"x.......x.......", s:"....x.......x...", h:"..x.x.x...x.x.x."}};
+const BASS = { // semitone offsets from D2, null = rest
+  refill:  [0,null,0,null,12,null,0,null,3,null,3,null,5,null,7,null],
+  labs:    [0,null,null,0,null,null,1,null,0,null,null,0,null,null,-2,null],
+  transfer:[0,0,12,0,0,12,0,0,-2,-2,10,-2,-4,-4,8,-4],
+  sched:   [0,null,null,null,7,null,null,null,5,null,null,null,3,null,1,null]};
+const CHORDS = { // per bar root triads (semis from D3)
+  calm:[[0,3,7],[-4,0,3],[-7,-4,0],[-5,-1,2]],
+  coffee:[[0,3,7],[0,3,7],[5,8,12],[3,7,10]],
+  chaos:[[0,1,7],[0,3,6],[1,4,7],[0,3,6]],
+  zen:[[0,7,14],[-4,3,10],[-2,5,12],[-5,2,9]]};
+const LEAD = {
+  freeze:[12,12,12,12,null,null,12,null,null,null,null,null,10,null,null,null],
+  hold:[0,null,2,null,3,null,5,null,7,null,8,null,10,null,12,null],
+  sup:[0,null,null,null,-5,null,null,null,-2,null,null,null,-7,null,null,null],
+  dog:[7,null,10,7,null,12,null,10,7,null,5,null,7,10,null,null]};
+const D3=f(12), D4=f(24);
+function schedule(t, st){
+  const bar = Math.floor(step/16)%4;
+  const c = CHANNELS[0].pads[picks.caller].k, d = DRUMS[c];
+  if(d.k[st]==="x") kick(t,bus.caller);
+  if(d.s[st]==="x") noise(t,bus.caller,"bandpass",1600,.16,.55);
+  if(d.h[st]==="x") noise(t,bus.caller,"highpass",7000,.04,.22);
+  const b = BASS[CHANNELS[1].pads[picks.req].k][st];
+  if(b!==null && b!==undefined) tone(t,bus.req,f(b),.2,.5,"sawtooth",520);
+  if(st===0){ const ch = CHORDS[CHANNELS[2].pads[picks.energy].k][bar]; ch.forEach(s=>tone(t,bus.energy,f(s,D3),stepDur*15,.07,"square",900)); }
+  const l = LEAD[CHANNELS[3].pads[picks.twist].k][st];
+  if(l!==null && l!==undefined) tone(t,bus.twist,f(l,D4),.22,.16,"triangle",3200);
+  const delay = Math.max(0,(t-AC.currentTime)*1000);
+  setTimeout(()=>visualTick(st), delay);
+}
+let stepDur = 60/104/4;
+function tick(){
+  while(nextT < AC.currentTime + .12){ schedule(nextT, step%16); step++; nextT += stepDur; }
+  timer = setTimeout(tick, 25);
+}
+function visualTick(st){
+  if(!playing) return;
+  const leds = document.querySelectorAll("#leds i");
+  leds.forEach((e,i)=>{ e.className = (i===Math.floor(st/2)) ? ("lit"+(st%4<2?"":" p")) : ""; });
+  CHANNELS.forEach((c,ci)=>{
+    let hit=false;
+    if(ci===0){ const d=DRUMS[c.pads[picks.caller].k]; hit = d.k[st]==="x"||d.s[st]==="x"; }
+    if(ci===1){ const b=BASS[c.pads[picks.req].k][st]; hit = b!==null&&b!==undefined; }
+    if(ci===2){ hit = st%4===0; }
+    if(ci===3){ const l=LEAD[c.pads[picks.twist].k][st]; hit = l!==null&&l!==undefined; }
+    const level = hit ? Math.round(vols[c.id]/100*6) : Math.max(0,Math.round(vols[c.id]/100*6)-3);
+    document.querySelectorAll(`#meter-${c.id} i`).forEach((e,i)=>{ e.className = i<level ? ("on"+(i>=4?" hot":"")) : ""; });
+    if(hit){ const pad=$(`pad-${c.id}-${picks[c.id]}`); if(pad){ pad.classList.add("hit"); setTimeout(()=>pad.classList.remove("hit"),90); } }
+  });
+}
+function startLoop(){
+  if(!ensureAudio()) return;
+  AC.resume(); playing=true; step=0; nextT=AC.currentTime+.06; tick();
+  $("play").setAttribute("aria-pressed","true"); $("play").textContent="■ Stop loop"; $("deck").classList.add("playing");
+}
+function stopLoop(){
+  playing=false; clearTimeout(timer);
+  $("play").setAttribute("aria-pressed","false"); $("play").textContent="▶ Play loop"; $("deck").classList.remove("playing");
+  document.querySelectorAll("#leds i, .meter i").forEach(e=>e.className="");
+}
+function padBlip(ch){
+  if(playing || !ensureAudio()) return;
+  AC.resume(); const t=AC.currentTime+.01;
+  if(ch==="caller"){ kick(t,bus.caller); noise(t+.15,bus.caller,"bandpass",1600,.14,.5); }
+  if(ch==="req") tone(t,bus.req,f(0),.25,.5,"sawtooth",520);
+  if(ch==="energy") CHORDS[CHANNELS[2].pads[picks.energy].k][0].forEach(s=>tone(t,bus.energy,f(s,D3),.6,.07,"square",900));
+  if(ch==="twist") LEAD[CHANNELS[3].pads[picks.twist].k].slice(0,8).forEach((n,i)=>{ if(n!==null) tone(t+i*.1,bus.twist,f(n,D4),.18,.16); });
+}
+function scratch(){
+  if(!ensureAudio()) return; AC.resume();
+  const t=AC.currentTime, s=AC.createBufferSource(); s.buffer=noiseBuf;
+  const bp=AC.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=3;
+  bp.frequency.setValueAtTime(2400,t); bp.frequency.exponentialRampToValueAtTime(480,t+.15); bp.frequency.exponentialRampToValueAtTime(1900,t+.34);
+  const g=AC.createGain(); g.gain.setValueAtTime(.4,t); g.gain.exponentialRampToValueAtTime(.001,t+.38);
+  s.connect(bp).connect(g).connect(master); s.start(t); s.stop(t+.4);
+}
+$("play").onclick = () => playing ? stopLoop() : startLoop();
+$("tempo").onclick = () => {
+  tempoIdx=(tempoIdx+1)%TEMPOS.length; const T=TEMPOS[tempoIdx];
+  stepDur = 60/T.bpm/4; $("tempo").textContent=`Tempo: ${T.n}`; $("bpm").innerHTML=`${T.bpm} <small>BPM</small>`;
+};
+
+/* drop the mix */
+let recRot=0, dropping=false, lastMix="";
+$("drop").onclick = () => {
+  if(dropping) return; dropping=true; $("drop").disabled=true; $("mix").hidden=true;
+  scratch();
+  recRot += 720 + Math.random()*360; $("record").style.transform=`rotate(${recRot}deg)`;
+  setTimeout(()=>{ dropping=false; $("drop").disabled=false; buildMix(); }, 1400);
+};
+function buildMix(){
+  const C=CHANNELS[0].pads[picks.caller], R=CHANNELS[1].pads[picks.req], E=CHANNELS[2].pads[picks.energy], T=CHANNELS[3].pads[picks.twist];
+  const v=vols, loud = CHANNELS.reduce((a,c)=> v[c.id]>v[a.id]?c:a, CHANNELS[0]);
+  const endings = {
+    caller:"The caller's energy ran the whole track, and you still said “have a great day” like you meant it.",
+    req:"That bassline of a request kept looping, and you resolved it anyway.",
+    energy:"Your energy carried the room. The queue felt it.",
+    twist:"The plot twist stole the show, but you closed the call like a headliner."};
+  const title = `${C.short} x ${R.short} (${E.remix} Remix)`;
+  const story = `It started with ${C.line}, who ${R.line}. ${E.line}. ${T.line} ${endings[loud.id]}`;
+  const spook = Math.round((v.energy + v.twist)/2);
+  const chaos = Math.min(100, Math.round((v.caller + v.twist)/2 + (C.k==="polter"?15:0) + (E.k==="chaos"?15:0)));
+  const pro = Math.max(0, Math.min(100, Math.round(100 - chaos*.55 + E.pro)));
+  $("mixTitle").textContent=title; $("mixStory").textContent=story;
+  $("stSpook").textContent=spook; $("stChaos").textContent=chaos; $("stPro").textContent=pro;
+  $("mixDare").textContent=T.dare;
+  $("mix").hidden=false; $("mixCopied").hidden=true;
+  lastMix = `🎧 DJ Spooky Shift · The Haunted Headset\n${title}\n${story}\nSpooky ${spook} · Chaos ${chaos} · Composure ${pro}`;
+  $("mix").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+$("remix").onclick = () => {
+  CHANNELS.forEach(c => picks[c.id] = Math.floor(Math.random()*c.pads.length));
+  CHANNELS.forEach(c => document.querySelectorAll(`.pad[data-ch="${c.id}"]`).forEach((x,i)=>x.setAttribute("aria-pressed", i===picks[c.id])));
+  $("drop").click();
+};
+$("copyMix").onclick = () => {
+  const ok=()=>{ $("mixCopied").hidden=false; };
+  const fb=()=>{ const ta=document.createElement("textarea"); ta.value=lastMix; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); ok();}catch(_){} ta.remove(); };
+  try{ navigator.clipboard.writeText(lastMix).then(ok).catch(fb); }catch(e){ fb(); }
+};
+function openDj(){ show("dj"); }
+$("toDj").onclick = openDj; $("toDj2").onclick = openDj;
+$("djBack").onclick = () => { stopLoop(); show(lastScreen); };
+
+/* shift clock */
+const t0 = Date.now();
+setInterval(()=>{ const s = Math.floor((Date.now()-t0)/1000); $("clock").textContent = `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")} on shift`; }, 1000);
+</script>
+
+</body>
+</html>
